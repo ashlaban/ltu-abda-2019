@@ -1,0 +1,258 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[usenames,dvipsnames,table]{beamer}
+
+\mode<presentation> {
+
+\usetheme{Madrid}
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{listings}
+\usepackage{enumitem}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[ABDA Ex. 2]{Applied Bayesian Data Analysis --- Exercise 3 A}
+
+\author{Kim Albertsson} % Your name
+\institute[LTU and CERN]
+{
+CERN and Luleå University of Technology \\
+\medskip
+\textit{kim.albertsson@ltu.se}
+}
+\date{\today}
+
+\newcommand{\cgy}{\cellcolor{gray!25}}
+\newcommand{\cgr}{\cellcolor{green!25}}
+\newcommand{\cye}{\cellcolor{orange!25}}
+\newcommand{\ccb}{\cellcolor{Cerulean!25}}
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+% \begin{frame}
+% \frametitle{Overview} % Table of contents slide, comment this block out to remove it
+% \tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+% \end{frame}
+
+% \begin{frame}
+% \frametitle{Multiple Columns}
+% \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+
+% \column{.45\textwidth} % Left column and width
+% \textbf{Heading}
+% \begin{enumerate}
+% \item Statement
+% \item Explanation
+% \item Example
+% \end{enumerate}
+
+% \column{.5\textwidth} % Right column and width
+% Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
+
+% \end{columns}
+% \end{frame}
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+\section{Question 1}
+\begin{frame}
+\begin{center}
+{\huge{Question 1}}
+\\\vspace{2em}
+What is $p(\mathrm{E}=\mathrm{Blue}|\mathrm{H} \in \{\mathrm{Red}, \mathrm{Blond}\})$?
+\end{center}
+\end{frame}
+
+\begin{frame}
+
+\textbf{Q:} What is $p(\mathrm{E}=\mathrm{Blue}|\mathrm{H} \in \{\mathrm{Red}, \mathrm{Blond}\})$?
+
+\begin{align}\end{align}
+
+\textbf{Joint probabilities}
+\begin{table}
+\begin{tabular}{lccccc}
+           & Black & Brown & Red  & Blond & $\sum$ \\
+     Brown &  0.11 &  0.20 & 0.04 &  0.01 & 0.37  \\
+      Blue &  0.03 &  0.14 & 0.03 &  0.16 & 0.36  \\
+     Hazel &  0.03 &  0.09 & 0.02 &  0.02 & 0.16  \\
+     Green &  0.01 &  0.05 & 0.02 &  0.03 & 0.11  \\
+    $\sum$ &  0.18 &  0.48 & 0.12 &  0.21 & 1.0   \\
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}
+
+\textbf{Q:} What is $p(\mathrm{E}=\mathrm{Blue}|\mathrm{H} \in \{\mathrm{Red}, \mathrm{Blond}\})$?
+
+\begin{align*}
+p(\mathrm{E}=\mathrm{Blue}|\mathrm{H}\in\{\mathrm{Red},\mathrm{Blond}\})
+=\\ \frac{\textcolor{green}{p(\mathrm{H}\in\{\mathrm{Red},\mathrm{Blond}\}
+                             |\textcolor{green}{\mathrm{E}=\mathrm{Blue}})
+                             p(\mathrm{E}=\mathrm{Blue})}}
+       {\textcolor{orange}{p(\mathrm{H}\in\{\mathrm{Red}, \mathrm{Blond}\})}}
+\end{align*}
+
+\textbf{Joint probabilities}
+\begin{table}
+\begin{tabular}{lccccc}
+           & Black & Brown & Red  & Blond & $\sum$ \\
+     Brown &\cgy0.11&\cgy0.20&\cye0.04&\cye0.01& 0.37 \\
+      Blue &\cgy0.03&\cgy0.14&\cgr0.03&\cgr0.16& 0.36 \\
+     Hazel &\cgy0.03&\cgy0.09&\cye0.02&\cye0.02& 0.16 \\
+     Green &\cgy0.01&\cgy0.05&\cye0.02&\cye0.03& 0.11 \\
+    $\sum$ &  0.18 &  0.48 & 0.12 &  0.21 & 1.0   \\
+\end{tabular}
+\end{table}
+\end{frame}
+
+
+\begin{frame}
+
+\textbf{Q:} What is $p(\mathrm{E}=\mathrm{Blue}|\mathrm{H} \in \{\mathrm{Red}, \mathrm{Blond}\})$?
+
+\begin{align*}
+p(\mathrm{E}=\mathrm{Blue}|\mathrm{H}\in\{\mathrm{Red},\mathrm{Blond}\})
+=\\ \frac{\textcolor{green}{p(\mathrm{H}\in\{\mathrm{Red},\mathrm{Blond}\}
+                             |\textcolor{green}{\mathrm{E}=\mathrm{Blue}})
+                             p(\mathrm{E}=\mathrm{Blue})}}
+       {\textcolor{orange}{p(\mathrm{H}\in\{\mathrm{Red}, \mathrm{Blond}\})}}
+=\\ \frac{0.03+0.16}{0.12+0.21}
+=\\ 0.58
+\end{align*}
+
+\textbf{Joint probabilities}
+\begin{table}
+\begin{tabular}{lccccc}
+           & Black & Brown & Red  & Blond & $\sum$ \\
+     Brown &\cgy0.11&\cgy0.20&\cye0.04&\cye0.01& 0.37 \\
+      Blue &\cgy0.03&\cgy0.14&\cgr0.03&\cgr0.16& 0.36 \\
+     Hazel &\cgy0.03&\cgy0.09&\cye0.02&\cye0.02& 0.16 \\
+     Green &\cgy0.01&\cgy0.05&\cye0.02&\cye0.03& 0.11 \\
+    $\sum$ &  0.18 &  0.48 & 0.12 &  0.21 & 1.0   \\
+\end{tabular}
+\end{table}
+\end{frame}
+
+\section{Question 2}
+\begin{frame}
+\begin{center}
+{\huge{Question 2}}
+\\\vspace{2em}
+Create a function to calculate $p(\mathrm{sick}|T)$ where T is any sequence drawn from $\{+, -\}$. Explain how the function operates.
+\end{center}
+\end{frame}
+
+\begin{frame}
+The setting supposes the existence of a disease with prevalence 0.001 in a population ($p(\mathrm{sick})=0.001$). It also supposes the existence of a test for said disease with sensitivity 0.99 ($p(+|\mathrm{sick})=0.99$) and specificity 0.95 ($p(-|\mathrm{sick})=0.05$).
+
+\begin{align}
+\end{align}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{lstlisting}[language=Python]
+p = {}
+
+# Conditionals
+p['+|:('] = 0.99 # True positive
+p['+|:)'] = 0.05 # False positive
+ 
+ 
+ 
+# Marginals
+p[':('] = 0.001 # p sick
+ 
+ 
+ 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{lstlisting}[language=Python]
+p = {}
+
+# Conditionals
+p['+|:('] = 0.99 # True positive
+p['+|:)'] = 0.05 # False positive
+p['-|:('] = 1 - p['+|:(']
+p['-|:)'] = 1 - p['+|:)']
+
+# Marginals
+p[':('] = 0.001 # p sick
+p[':)'] = 1 - p[':('] # p healthy
+p['+'] = p['+|:(']*p[':('] + p['+|:)']*p[':)']
+p['-'] = 1 - p['+']
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\begin{align*}
+p(h|t_0t_1\ldots) &= p(h|t_0, t_1, \ldots)\\
+                  &= \frac{p(t_0, t_1, \ldots|h)}{p(t_0, t_1, \ldots)}p(h) \\
+                  &\mathrm{assume\ independence}\\
+                  &= \frac{p(t_0|h) p(t_1|h) p(\ldots|h)}{p(t_0)p(t_1)p(\ldots)}p(h)\\
+                  &= \ldots \cdot \frac{p(t_1|h)}{p(t_1)}
+                            \cdot \frac{p(t_0|h)}{p(t_0)}
+                            \cdot p(h)
+\end{align*}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{lstlisting}[language=Python]
+def proba_is_sick(test_scores):
+    allowed_symbols = '-+'
+
+    posterior = p[':(']
+    for symbol in test_scores:
+        assert(symbol in allowed_symbols)
+        prior = posterior
+        likelihood = p[f'{symbol}|:(']
+        evidence = p[f'{symbol}']
+        posterior = likelihood / evidence * prior
+    return posterior
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{lstlisting}[language=Python]
+>>> proba_is_sick('')
+0.001
+>>> proba_is_sick('+')
+0.019434628975265017
+>>> proba_is_sick('+-')
+0.0002047776639544922
+\end{lstlisting}
+\end{frame}
+
+
+\end{document} 

@@ -13,7 +13,7 @@ class Metropolis(SamplerBase):
                dtype=np.float):
         '''Use metropolis sampling to sample from target pdf.
 
-        
+        Note: Currently uses non-log probas.
 
         Arguments
         ---------

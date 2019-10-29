@@ -78,7 +78,7 @@ def hdi_std(sample, cred_mass=0.95):
 
     # HDI is the shortest interval
     hdi_min = x[np.argmin(ciWidth)]
-    hdi_max = x[np.argmax(ciWidth) + ciIdxInc]
+    hdi_max = x[np.argmin(ciWidth) + ciIdxInc]
 
     return (hdi_min, hdi_max)
 

@@ -1,0 +1,17 @@
+
+
+.DS_Store
+
+# TeX
+*.aux
+*.toc
+*.snm
+*.toc
+*.vrb
+*.log
+*.nav
+*.out
+
+# python
+__pycache__
+*.pyc

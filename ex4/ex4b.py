@@ -1,6 +1,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.integrate
 import scipy.interpolate
 import scipy.stats
 
@@ -101,6 +102,8 @@ mode_diff = theta_diff[np.argmax(posterior_diff)]
 
 # probablility theta > 0.5
 p = np.sum(posterior_y[theta>0.5])*0.01
+# TODO:
+# p_analytic = scipy.integrate.quad(pdf_y, 0, 1)
 
 # probablility theta_y > theta_z
 p_y_lgt_z = np.sum(posterior_diff[theta_diff>0.0])*0.01

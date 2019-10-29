@@ -75,7 +75,7 @@ class Slice(SamplerBase):
             # TODO: Split into two function, make choice earler in code hierarchy.
             #       Leaf choices are inefficient.
             #  stepsize: must be array-like
-            w = step_size[iDim]
+            w = step_size[dim]
             m = max_iter
 
             x1 = np.empty_like(x0)
@@ -115,7 +115,7 @@ class Slice(SamplerBase):
             '''
             '''
 
-            samples = np.empty(shape=(burnin, ndims), dtype=dtype)
+            samples = np.empty(shape=(nsamples, ndims), dtype=dtype)
 
             x1 = np.empty_like(x0)
             x1[:] = x0
@@ -161,6 +161,7 @@ class Slice(SamplerBase):
 
         if burnin < 1:
             burnin = burnin * nsamples
+        burnin = int(burnin)
 
         if x0 is None:
             x0 = np.zeros(shape[1:], dtype=np.float)

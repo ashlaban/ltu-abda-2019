@@ -9,6 +9,13 @@ import util
 
 plt.rc('text', usetex=True)
 
+#
+# Generate as many samples you want with e,g,
+# ```
+# python3 ex5_simulation.py -n 10000 -i 0
+# ```
+#
+
 sample_0 = np.load('sample-10000-0.npz')['data']
 sample_1 = np.load('sample-10000-1.npz')['data']
 sample_2 = np.load('sample-10000-2.npz')['data']

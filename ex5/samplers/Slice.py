@@ -1,8 +1,12 @@
 
 import time
+import threading
+import multiprocessing
 
 import numpy as np
 import tqdm
+
+from numba import jit, vectorize
 
 from ._base import SamplerBase
 
@@ -11,7 +15,8 @@ class Slice(SamplerBase):
     '''
 
     def sample(shape, pdf, x0=None, burnin=0.1,
-               dtype=None, max_iter=100, step_size=10):
+               dtype=None, max_iter=100, step_size=10,
+               njobs=1):
         '''Use Slice sampling to sample from target pdf
 
         Slice sampling generates a markov chain where each subsequent
@@ -70,7 +75,8 @@ class Slice(SamplerBase):
         A vector of shape `shape` sampled from the given pdf.
         '''
 
-        def find_slice(x0, y, pdf, step_size, dim=0, max_iter=100, scheme='linear'):
+        @jit(nopython=True, nogil=True)
+        def find_slice(x0, y, pdf, step_size, dim=0, max_iter=100):
             '''
             '''
             # TODO: Split into two function, make choice earler in code hierarchy.
@@ -82,58 +88,55 @@ class Slice(SamplerBase):
             x1 = np.empty_like(x0)
             x1[:] = x0
 
-            if scheme == 'linear':
-                r = np.random.uniform()
+            r = np.random.uniform(0, 1)
 
-                # Note: Interval assignment must be random for correctness
-                L = x0[dim] - r*w
-                R = L + w
+            # Note: Interval assignment must be random for correctness
+            L = x0[dim] - r*w
+            R = L + w
 
-                # Note: m, j, and k important for correctness
-                # TODO: Why?
-                j = int(m*np.random.uniform())
-                k = int(m-1-j)
+            # Note: m, j, and k important for correctness
+            # TODO: Why?
+            j = int(m*np.random.uniform(0, 1))
+            k = int(m-1-j)
 
+            x1[dim] = L
+            while (pdf(x1) > y) and (j>0):
+                L -= w
+                j -= 1
                 x1[dim] = L
-                while (np.sum(pdf(x1)) > y) and (j>0):
-                    L -= w
-                    j -= 1
-                    x1[dim] = L
 
+            x1[dim] = R
+            while (pdf(x1) > y) and (k>0):
+                R += w
+                k -= 1
                 x1[dim] = R
-                while (np.sum(pdf(x1)) > y) and (k>0):
-                    R += w
-                    k -= 1
-                    x1[dim] = R
-                
-            elif scheme == 'exponential':
-                raise NotImplementedError()
 
             assert(L < x0[dim] < R)
             return (L, R)
 
-        def _sample(pdf, x0, nsamples, ndims, step_size, dtype):
+        @jit(nopython=True, nogil=True)
+        def _sample_inplace(pdf, x0, dst, start=0, stop=-1, ndims=-1, step_size=1.):
             '''
             '''
 
-            samples = np.empty(shape=(nsamples, ndims), dtype=dtype)
+            if stop == -1:
+                stop = len(dst)
+
+            if ndims == -1:
+                ndims = len(x0)
 
             x1 = np.empty_like(x0)
             x1[:] = x0
 
-            time_start = time.time()
-
-            np_err = np.geterr()['divide']
-            np.seterr(divide = 'ignore')
-            pbar = tqdm.tqdm(range(nsamples))
-            for iSamp in pbar:
-                for iDim in np.random.permutation(range(ndims)):
-                    loglikelihood = np.sum(pdf(x0))
-                    y = np.log(np.random.uniform()) + loglikelihood
+            # time_start = time.time()
+            for iSamp in range(start, stop):
+                for iDim in np.random.permutation(np.arange(ndims)):
+                    loglikelihood = pdf(x0)
+                    y = np.log(np.random.uniform(0, 1)) + loglikelihood
                     L, R = find_slice(x0, y, pdf, dim=iDim, step_size=step_size)
 
                     x1[iDim] = np.random.uniform(L, R)
-                    while np.sum(pdf(x1)) < y:
+                    while pdf(x1) < y:
                         # Shrinkage
                         if x1[iDim] < x0[iDim]:
                             L = float(x1[iDim])
@@ -141,14 +144,18 @@ class Slice(SamplerBase):
                             R = float(x1[iDim])
                         x1[iDim] = np.random.uniform(L, R)
                     x0[iDim] = x1[iDim]
+                dst[iSamp, :] = x1
 
-                samples[iSamp, :] = x1
-            np.seterr(divide=np_err)
+            # time_end = time.time()
+            # total_time = time_end - time_start
 
-            time_end = time.time()
-            total_time = time_end - time_start
+            return dst, x0#, total_time
 
-            return samples, x0, total_time
+        @jit(nopython=True, nogil=True)
+        def _sample(pdf, x0, nsamples, ndims, step_size, dtype):
+            samples = np.empty(shape=(nsamples, ndims), dtype=dtype)
+            return _sample_inplace(pdf, x0, dst=samples, start=0, stop=nsamples, step_size=step_size)
+            
 
         # ============================
         # === Function 'sample' proper
@@ -175,15 +182,38 @@ class Slice(SamplerBase):
             dtype = x0.dtype
 
         if burnin:
-            print('Burn in:')
-            _, x0, _ = _sample(pdf, x0, burnin, ndims,
-                               step_size=step_size, dtype=dtype)
-        print('Sampling:')
-        samples, _, total_time = _sample(pdf, x0, nsamples, ndims,
-                                         step_size=step_size, dtype=dtype)
+            _, x0 = _sample(pdf, x0, burnin, ndims,
+                            step_size=step_size, dtype=dtype)
+        
+        if njobs < 2:
+            samples, _ = _sample(pdf, x0, nsamples, ndims,
+                                 step_size=step_size, dtype=dtype)
+        else:
+            samples = np.empty(shape=(nsamples, ndims), dtype=dtype)
 
-        print(f'Efficiency (slice): 1.0')
-        print(f'Time taken (slice): {total_time:.5}s ({total_time/nsamples:.5}s per sample)')
+            jobs = []
+            nsamples_remaining = nsamples
+            chunk_size = int(nsamples/njobs)
+            for iJob in range(njobs):
+                current_chunk_size = min(chunk_size, nsamples_remaining)
+                chunk_start = iJob * chunk_size
+                chunk_stop = chunk_start + current_chunk_size
+                nsamples_remaining -= current_chunk_size
+
+                jobs.append(multiprocessing.Process(target=_sample_inplace,
+                                             args=(pdf, x0),
+                                             kwargs=dict(dst=samples,
+                                                         ndims=ndims,
+                                                         start=chunk_start,
+                                                         stop=chunk_stop,
+                                                         step_size=step_size)))
+            for job in jobs:
+                job.start()
+            for job in jobs:
+                job.join()
+
+        # print(f'Efficiency (slice): 1.0')
+        # print(f'Time taken (slice): {total_time:.5}s ({total_time/nsamples:.5}s per sample)')
 
         return samples.reshape(orig_shape)
 

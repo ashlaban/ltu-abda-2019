@@ -2,6 +2,8 @@
 import numpy as np
 import scipy.stats
 
+from numba import jit, vectorize
+
 #
 # Model:
 #   log y = z
@@ -21,30 +23,66 @@ import scipy.stats
 # A: We marginalise the posterior, i.e. histogram w.r. only t. sigma.
 #
 
+@jit(nopython=True, nogil=True)
 def uniform(x, low, high):
     return np.logical_and((x >= low), (x <= high)) * 1./(high-low)
 
-# Important: Ensure sigmas of normal distrbutions can't be 0 or lower
+# @jit(nopython=True, nogil=True)
+@vectorize()
+def loguniform(x, low, high):
+    if (x > low) and (x < high):
+        return 0
+    else:
+        return -np.inf
+    # x = np.asarray([x]).reshape(-1)
+    # mask = np.logical_not(np.logical_and((x > low), (x < high)))
+    # ret = np.zeros_like(x)
+    # ret[mask] = -np.inf
+    # return ret
+
+
+@jit(nopython=True, nogil=True)
 def normal(x, mu, sigma):
     var = sigma**2
     c = 1./(np.sqrt(2*np.pi*var))
     arg = -(x - mu)**2 / (2*var)
-    return (sigma>0)*c*np.exp(arg)
-    # arg = -((x - mu)/2/sigma)**2
-    # return np.exp(arg)
+    return c*np.exp(arg)
 
+# @jit(nopython=True, nogil=True)
+@vectorize
+def lognormal(x, mu, sigma):
+    if sigma > 0:
+        c = sigma
+        arg = (x - mu)/sigma
+        return -np.log(c) - arg*arg/2
+    else:
+        return -np.inf
+        # return np.ones_like(x)*(-np.inf)
+
+
+@jit(nopython=True, nogil=True)
 def p_mu(mu): return uniform(mu, -100, 100)
+@jit(nopython=True, nogil=True)
 def p_tau(tau): return uniform(tau, 0.00001, 100)
+@jit(nopython=True, nogil=True)
 def p_sigma(sigma): return uniform(sigma, 0.00001, 100)
+@jit(nopython=True, nogil=True)
 def p_theta(theta, mu, tau): return normal(theta, mu, tau)
+@jit(nopython=True, nogil=True)
 def p_z(z, theta, sigma): return normal(z, theta, sigma)
 
+@jit(nopython=True, nogil=True)
 def logp_mu(mu): return np.log(p_mu(mu))
+@jit(nopython=True, nogil=True)
 def logp_tau(tau): return np.log(p_tau(tau))
+@jit(nopython=True, nogil=True)
 def logp_sigma(sigma): return np.log(p_sigma(sigma))
+@jit(nopython=True, nogil=True)
 def logp_theta(theta, mu, tau): return np.log(p_theta(theta, mu, tau))
+@jit(nopython=True, nogil=True)
 def logp_z(z, theta, sigma): return np.log(p_z(z, theta, sigma))
 
+@jit(nopython=True, nogil=True)
 def posterior_probability(z, theta, sigma, mu, tau, id):
     # z can be vector 1d
     # theta can be vector 1d
@@ -54,7 +92,20 @@ def posterior_probability(z, theta, sigma, mu, tau, id):
     return (np.prod(_pz) * np.prod(_pt) * p_sigma(sigma) *
             p_mu(mu) * p_tau(tau))
 
+@jit(nopython=True, nogil=True)
 def posterior_log_probability(z, theta, sigma, mu, tau, id):
+    # z can be vector 1d
+    # theta can be vector 1d
+    # id is mapping, which theta to use for the given z
+    _pz = lognormal(z, theta[id], sigma)
+    _pt = lognormal(theta, mu, tau)
+    return (np.sum(_pz) + np.sum(_pt) +
+            loguniform(sigma, 0, 100) +
+            loguniform(mu, -100, 100) +
+            loguniform(tau, 0, 100))
+
+@jit(nopython=True, nogil=True)
+def posterior_log_probability_old(z, theta, sigma, mu, tau, id):
     # z can be vector 1d
     # theta can be vector 1d
     # id is mapping, which theta to use for the given z
@@ -65,6 +116,7 @@ def posterior_log_probability(z, theta, sigma, mu, tau, id):
 
 
 def gen_sampler_pdf(z, id, n_theta):
+    @jit(nopython=True, nogil=True)
     def fn(x):
         theta = x[0:n_theta]
         sigma = x[n_theta]
@@ -75,6 +127,9 @@ def gen_sampler_pdf(z, id, n_theta):
 
 
 if __name__ == '__main__':
+
+    import matplotlib.pyplot as plt
+
     print(f'p_mu(0): {p_mu(0)}, logp_mu(0): {logp_mu(0)}' )
     print(f'p_mu(10000.1): {p_mu(10000.1)}' )
 
@@ -93,4 +148,24 @@ if __name__ == '__main__':
 
     _sampler_pdf = gen_sampler_pdf(z=np.asarray([0, 1, 0, 1]), id=np.asarray([0, 0, 1, 1]), n_theta=2)
     print(_sampler_pdf(x=np.asarray([0, 1, 1, 0, 1])))
+
+
+    x = np.linspace(-2, 2)
+    plt.figure()
+    plt.plot(x, lognormal(x, 0, 1), linestyle='solid', color='tab:blue')
+    plt.plot(x, np.log(normal(x, 0, 1)), linestyle='dashed', color='tab:blue')
+    plt.plot(x, loguniform(x, 0, 1), color='tab:orange')
+    
+
+    plt.figure()
+    fn1 = list(map(lambda x: posterior_log_probability(np.asarray([np.log(200.)]), np.asarray([x]), 1., 5., 1., np.asarray([0], dtype=np.int)), x))
+    fn2 = list(map(lambda x: posterior_log_probability_old(np.asarray([np.log(200.)]), np.asarray([x]), 1., 5., 1., np.asarray([0], dtype=np.int)), x))
+
+    print(fn1)
+    print(fn2)
+    plt.plot(x, fn1, color='tab:blue')
+    plt.plot(x, fn2, color='tab:orange')
+
+
+    plt.show()
 

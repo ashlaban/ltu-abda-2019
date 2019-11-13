@@ -1,4 +1,6 @@
 
+import argparse
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
@@ -9,26 +11,22 @@ import util
 
 plt.rc('text', usetex=True)
 
-#
-# Generate as many samples you want with e,g,
-# ```
-# python3 ex5_simulation.py -n 10000 -i 0
-# ```
-#
+parser = argparse.ArgumentParser()
+parser.add_argument(dest='input_files', nargs='*',
+                    help='''Generate as many samples you want with e.g.
+                            ```
+                                python3 ex5_simulation.py -n 10000 -i 0
+                            ```
+                            Load with `python -m ex5.py sample-10000-*.npz`.
+                            ''')
+args = parser.parse_args()
 
-sample_0 = np.load('sample-10000-0.npz')['data']
-sample_1 = np.load('sample-10000-1.npz')['data']
-sample_2 = np.load('sample-10000-2.npz')['data']
-sample_3 = np.load('sample-10000-3.npz')['data']
-sample_4 = np.load('sample-10000-4.npz')['data']
-sample_5 = np.load('sample-10000-5.npz')['data']
-sample_6 = np.load('sample-10000-6.npz')['data']
-sample_7 = np.load('sample-10000-7.npz')['data']
-sample_8 = np.load('sample-10000-8.npz')['data']
-sample_9 = np.load('sample-10000-9.npz')['data']
-sample = np.concatenate([sample_0, sample_1, sample_2, sample_3, sample_4,
-                         sample_5, sample_6, sample_7, sample_8, sample_9],
-                        axis=0)
+samples = []
+for file_name in args.input_files:
+    samples += [np.load(file_name)['data']]
+sample = np.concatenate(samples, axis=0)
+
+print(sample)
 
 n_theta = 34
 

@@ -1,0 +1,589 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[usenames,dvipsnames]{beamer}
+
+\mode<presentation> {
+
+\usetheme{Madrid}
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+%\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{listings}
+\usepackage{enumitem}
+
+\newcommand{\pydef}{{\color{BurntOrange}def}\ }
+\newcommand{\pyimport}{{\color{Cerulean}import}\ }
+\newcommand{\pyas}{{\color{Cerulean}as}\ }
+\newcommand{\pyassert}{{\color{Cerulean}assert}\ }
+\newcommand{\pyreturn}{{\color{Cerulean}return}\ }
+\newcommand{\pyparam}[1]{{\color{SkyBlue}#1}\ }
+
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[ABDA Ex. 2]{Applied Bayesian Data Analysis --- Exercise 2}
+
+\author{Kim Albertsson} % Your name
+\institute[LTU and CERN]
+{
+CERN and Luleå University of Technology \\
+\medskip
+\textit{kim.albertsson@ltu.se}
+}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+% \begin{frame}
+% \frametitle{Overview} % Table of contents slide, comment this block out to remove it
+% \tableofcontents % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+% \end{frame}
+
+% \begin{frame}
+% \frametitle{Multiple Columns}
+% \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+
+% \column{.45\textwidth} % Left column and width
+% \textbf{Heading}
+% \begin{enumerate}
+% \item Statement
+% \item Explanation
+% \item Example
+% \end{enumerate}
+
+% \column{.5\textwidth} % Right column and width
+% Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
+
+% \end{columns}
+% \end{frame}
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+\section{Task A}
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{frame}[fragile]
+\frametitle{Task A}
+
+\textbf{Task A --- Question 1}
+\begin{enumerate}[label=\alph*]
+\item Recreate Figure 4.1 in the book by creating a function that simulates coin tosses from a fair coin.
+\item Modify the function so that the coin is biased with $\theta=0.25$ ($\theta$ is proportion of heads).
+\item Sample tosses with the biased coin and plot a histogram with relative frequencies and true probability mass.
+\end{enumerate}
+\end{frame}
+
+
+\begin{frame}
+Recreate Figure 4.1 in the book by creating a function that simulates coin tosses from a fair coin.
+(Bonus: Also show for biased coin with $\theta=0.25$!)
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 1A-B}
+\begin{lstlisting}[language=Python]
+import numpy.random.uniform as uniform
+def coin(shape=(1,), t=0.5):
+    '''
+    t: Proportion of 1's in output
+        This means `coin(x, t).sum()/x` tends to `t`
+        as `x` tends to infinity.
+    '''
+    assert(0.0 <= t <= 1.0)
+    return uniform(shape=shape, 1.0) <= (1.0-t)
+\end{lstlisting}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 1A-B}
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+np.random.seed(1234)
+X = np.asarray(range(1, 1001))
+Y1 = coin(shape=1000, t=0.5)
+Y2 = coin(shape=1000, t=0.25)
+
+plt.axhline(0.5, linestyle='dashed',
+            color='grey', label='True t=0.5')
+plt.axhline(0.25, linestyle='dashed',
+            color='grey', label='True t=0.25')
+plt.step(X, Y1.cumsum()/X, label='Est. t=0.5')
+plt.step(X, Y2.cumsum()/X, label='Est. t=0.25')
+plt.show()
+\end{lstlisting}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 1A-B}
+\begin{figure}
+\centering
+\includegraphics[height=0.8\textheight]{img/A1ab.png}
+\end{figure}
+\end{frame}
+
+
+
+
+
+
+
+\begin{frame}
+\frametitle{Task A --- Q 1C}
+\begin{itemize}
+\item Sample tosses with the biased coin ($\theta=0.25$). Compare histogram with relative frequencies to the true probability mass function.
+	\begin{itemize}
+	\item What will happen when n grows?
+	\item \textcolor{ForestGreen}{Hypothesis: Histogram and pmf approach each other!}
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 1C}
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+
+np.random.seed(1234)
+X = coin(100, 0.25)
+
+bins = [0, 0.5, 1.0]
+plt.hist(X[X==0], histtype='step', bins=bins,
+         weights=...)
+plt.hist(X[X==1], histtype='step', bins=bins,
+         weights=...)
+\end{lstlisting}
+\vspace{2em}
+The pmf should sum to 1, hence weighting is required.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 1C}
+\begin{lstlisting}[language=Python]
+import scipy.interpolate.interp1d as interp1d
+pmf = interp1d([-10., 0., 0.5, 1., 10.],
+               [0., 0.75, 0.25, 0.0, 0.0],
+               kind='zero')
+x_pmf = np.linspace(-0.01, 1.01, 1001)
+plt.step(x_pmf, pmf(x_pmf), where='post')
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\frametitle{Task A --- Q 1C}
+\begin{figure}
+\centering
+\includegraphics[height=0.8\textheight]{img/A1c10.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Task A --- Q 1C}
+\begin{figure}
+\centering
+\includegraphics[height=0.8\textheight]{img/A1c100.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Task A --- Q 1C}
+\begin{figure}
+\centering
+\includegraphics[height=0.8\textheight]{img/A1c10k.png}
+\end{figure}
+\end{frame}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2}
+
+\textbf{Task A --- Question 2}
+\begin{enumerate}[label=\alph*]
+\item Draw 10000 samples from $\mathcal{N}(\mu=3.4, \sigma^2=3.0)$. Plot frequencies and pdf.
+\item Calculate expectation using Riemann summing of 1) relative freq.s, 2) pdf. Compare with parameter $\mu$, and sample mean.
+\item Do the same for variance.
+\item Draw from a lognormal distribution ($Y=e^X$ for $X \sim \mathcal{N}$), plot and compare relative freq.s and pdf. Find the mode of the distribution.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2A}
+Draw 10000 samples from $\mathcal{N}(\mu=3.4, \sigma^2=3.0)$. Plot frequencies and pdf.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2A}
+
+$$\operatorname{pdf} (x) = \frac{1}{\sqrt{2\pi} \sigma} \exp - \frac{(x - \mu)^2}{2\sigma}$$
+
+\begin{lstlisting}[language=Python]
+# Sample
+import numpy.random.normal as sample_normal
+Y_samp = sample_normal(10000)
+
+# True
+import scipy.stats.norm as norm
+pdf = norm(loc=3.4, scale=np.sqrt(3))
+bins_true = np.linspace(norm.ppf(0.001),
+                        norm.ppf(0.999),
+                        1000)
+Y_true = norm.pdf(bins_true)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2A}
+\begin{figure}
+\centering
+\includegraphics[height=0.8\textheight]{img/A2a.png}
+\end{figure}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Task A --- Q 2B-C}
+\begin{itemize}
+\item Calculate, using the PDF above and a Riemann sum to numerically integrate, the expected value using the definition of expectation in Eq. (4.6) page 85. Compare against the sample mean value of the draws and against the true . Do they match?
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2B-C}
+Reminder, properties to calculate
+\begin{align}
+E[X]     &=\sum x\ p(x),\ x \in X \\
+Var[X]   &=\sum (x - E[X])^2\ p(x),\ x \in X
+\end{align}
+
+Reminder, Riemann summation
+\begin{align}
+\int_a^b dt\, f(t)  \approx \sum_i f(t_i) (x_{i+1} - x_i)
+\end{align}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{lstlisting}[language=Python]
+L = norm.ppf(.001)
+R = norm.ppf(.999)
+
+# Sample
+bins_samp = np.linspace(L, R, int((R-L)/0.1))
+h, b = np.histogram(Y_samp, bins=bins_samp,
+                    density=True)
+ex_samp = sum([h[i]*b[i]*0.1 for i in range(len(h))])
+
+# True
+dx = (R-L) / 1000
+ex_true = np.asarray([Y_true[i]*bins_true[i]*dx
+                      for i in range(n)]).cumsum()
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2B-C}
+$$Var(X) = E[(X - \mu)^2] = E[(X - E[X])^2] = E[X^2] - E[X]^2$$
+
+\begin{lstlisting}[language=Python]
+mean_sq_samp = sum([bins_samp[i]**2*h_samp[i]*h
+                    for i in range(n)])
+sq_mean_samp = (sum([bins_samp[i]*h_samp[i]*h
+                     for i in range(n)]))**2
+var_samp = (mean_sq_samp - sq_mean_samp) * n/(n-1)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\frametitle{Task A --- Q 2B-C}
+Using 10000 samples:
+\begin{table}
+\centering
+\begin{tabular}{lll}
+             & Expected Value & Variance \\
+Riemann data & 3.3 (3.349)    & 3.0 (3.04) \\
+Riemann pdf  & 3.4 (3.39)     & 3.0 (2.967) \\
+Mean data    & 3.4 (3.428)    & --- \\
+\end{tabular}
+\end{table}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Task A --- Q 2D}
+\begin{itemize}
+\item Show a lognormal distribution. Compare with pdf.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2D}
+\begin{lstlisting}[language=Python]
+import numpy as np
+import scipy as sp
+
+Y_samp = np.random.normal(loc=0.0, scale=np.sqrt(1.), size=(10000,))
+Y_samp = np.exp(Y_samp)
+
+norm = sp.stats.lognorm(s=np.sqrt(1),
+                        scale=np.exp(0.0))
+L = norm.ppf(0.001)
+R = norm.ppf(0.999)
+bins_pdf = np.linspace(L, R, 1000)
+Y_true = norm.pdf(bins_pdf)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2D}
+\begin{lstlisting}[language=Python]
+import matplotlib.pyplot as plt
+
+plt.hist(data, histtype='step',
+         bins=np.linspace(L, R,
+                          int((R-L) / (0.1))),
+         density=True, label='Sample')
+plt.plot(bins_pdf, Y_true)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2D}
+\begin{figure}
+\centering
+\includegraphics[height=0.8\textheight]{img/A2d.png}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{Task A --- Q 2D}
+\begin{itemize}
+\item Find the mode of the lognormal distribution.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Task A --- Q 2D}
+\begin{lstlisting}[language=Python]
+h_data, bins_data = np.histogram(
+    data, density=True
+    bins=np.linspace(L, R, int((R-L) / (0.1))))
+
+mode_data = bins_data[np.argmax(h_data)]
+mode_pdf = x_pdf[np.argmax(pdf)]
+mode_pdf2 = scipy.optimize.fmin(lambda x: -norm.pdf(x), 1.0)[0]
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+\frametitle{Task A --- Q 2D}
+Using 10000 samples:
+\begin{table}
+\centering
+\begin{tabular}{lll}
+                  & Estimated Mode \\
+sample (argmax)   & 0.25 (0.2494)   \\
+pdf (argmax)      & 0.37 (0.3721)   \\
+pdf (Nelder-Mead) & 0.37 (0.3679)   \\
+\end{tabular}
+\end{table}
+\end{frame}
+
+% %------------------------------------------------
+
+% \begin{frame}
+% \frametitle{Bullet Points}
+% \begin{itemize}
+% \item Lorem ipsum dolor sit amet, consectetur adipiscing elit
+% \item Aliquam blandit faucibus nisi, sit amet dapibus enim tempus eu
+% \item Nulla commodo, erat quis gravida posuere, elit lacus lobortis est, quis porttitor odio mauris at libero
+% \item Nam cursus est eget velit posuere pellentesque
+% \item Vestibulum faucibus velit a augue condimentum quis convallis nulla gravida
+% \end{itemize}
+% \end{frame}
+
+% %------------------------------------------------
+
+% \begin{frame}
+% \frametitle{Blocks of Highlighted Text}
+% \begin{block}{Block 1}
+% Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
+% \end{block}
+
+% \begin{block}{Block 2}
+% Pellentesque sed tellus purus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vestibulum quis magna at risus dictum tempor eu vitae velit.
+% \end{block}
+
+% \begin{block}{Block 3}
+% Suspendisse tincidunt sagittis gravida. Curabitur condimentum, enim sed venenatis rutrum, ipsum neque consectetur orci, sed blandit justo nisi ac lacus.
+% \end{block}
+% \end{frame}
+
+% %------------------------------------------------
+
+% \begin{frame}
+% \frametitle{Multiple Columns}
+% \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+
+% \column{.45\textwidth} % Left column and width
+% \textbf{Heading}
+% \begin{enumerate}
+% \item Statement
+% \item Explanation
+% \item Example
+% \end{enumerate}
+
+% \column{.5\textwidth} % Right column and width
+% Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
+
+% \end{columns}
+% \end{frame}
+
+% %------------------------------------------------
+% \section{Second Section}
+% %------------------------------------------------
+
+% \begin{frame}
+% \frametitle{Table}
+% \begin{table}
+% \begin{tabular}{l l l}
+% \toprule
+% \textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2}\\
+% \midrule
+% Treatment 1 & 0.0003262 & 0.562 \\
+% Treatment 2 & 0.0015681 & 0.910 \\
+% Treatment 3 & 0.0009271 & 0.296 \\
+% \bottomrule
+% \end{tabular}
+% \caption{Table caption}
+% \end{table}
+% \end{frame}
+
+% %------------------------------------------------
+
+% \begin{frame}
+% \frametitle{Theorem}
+% \begin{theorem}[Mass--energy equivalence]
+% $E = mc^2$
+% \end{theorem}
+% \end{frame}
+
+% %------------------------------------------------
+
+% \begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
+% \frametitle{Verbatim}
+% \begin{example}[Theorem Slide Code]
+% \begin{verbatim}
+% \begin{frame}
+% \frametitle{Theorem}
+% \begin{theorem}[Mass--energy equivalence]
+% $E = mc^2$
+% \end{theorem}
+% \end{frame}\end{verbatim}
+% \end{example}
+% \end{frame}
+
+% %------------------------------------------------
+
+% \begin{frame}
+% \frametitle{Figure}
+% Uncomment the code on this slide to include your own image from the same directory as the template .TeX file.
+% %\begin{figure}
+% %\includegraphics[width=0.8\linewidth]{test}
+% %\end{figure}
+% \end{frame}
+
+% %------------------------------------------------
+
+% \begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
+% \frametitle{Citation}
+% An example of the \verb|\cite| command to cite within the presentation:\\~
+
+% This statement requires citation \cite{p1}.
+% \end{frame}
+
+% %------------------------------------------------
+
+% \begin{frame}
+% \frametitle{References}
+% \footnotesize{
+% \begin{thebibliography}{99} % Beamer does not support BibTeX so references must be inserted manually as below
+% \bibitem[Smith, 2012]{p1} John Smith (2012)
+% \newblock Title of the publication
+% \newblock \emph{Journal Name} 12(3), 45 -- 678.
+% \end{thebibliography}
+% }
+% \end{frame}
+
+% %------------------------------------------------
+
+% \begin{frame}
+% \Huge{\centerline{The End}}
+% \end{frame}
+
+% %----------------------------------------------------------------------------------------
+
+\end{document} 

@@ -1,0 +1,330 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beamer Presentation
+% LaTeX Template
+% Version 1.0 (10/11/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND THEMES
+%----------------------------------------------------------------------------------------
+
+\documentclass[usenames,dvipsnames,table]{beamer}
+
+\mode<presentation> {
+
+\usetheme{Madrid}
+%\setbeamertemplate{footline} % To remove the footer line in all slides uncomment this line
+%\setbeamertemplate{footline}[page number] % To replace the footer line in all slides with a simple slide count uncomment this line
+\setbeamertemplate{navigation symbols}{} % To remove the navigation symbols from the bottom of all slides uncomment this line
+}
+
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{fontspec}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{xfrac}
+% \usepackage{enumitem}
+
+\usefonttheme[onlymath]{serif}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title[ABDA Ch 6]{Applied Bayesian Data Analysis --- Chapter 6}
+
+\author{Kim Albertsson} % Your name
+\institute[LTU and CERN]
+{
+CERN and Luleå University of Technology \\
+\medskip
+\textit{kim.albertsson@ltu.se}
+}
+\date{\today}
+
+\newcommand{\cgy}{\cellcolor{gray!25}}
+\newcommand{\cgr}{\cellcolor{green!25}}
+\newcommand{\cye}{\cellcolor{orange!25}}
+\newcommand{\ccb}{\cellcolor{Cerulean!25}}
+
+\newcommand{\bern}[2]{{#2}^{#1}({1-#2})^{1-#1}}
+
+\begin{document}
+
+\begin{frame}
+\titlepage % Print the title page as the first slide
+\end{frame}
+
+% \begin{frame}
+% \frametitle{}
+% \begin{itemize}
+% \item
+% \end{itemize}
+% \end{frame}
+
+%----------------------------------------------------------------------------------------
+%	PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+\section{Chapter 6}
+\begin{frame}
+\begin{center}
+{\huge{Chapter 6}}
+\\\vspace{2em}
+Inferring a Binomial Probability via Exact Mathematical Analysis
+\vspace{5em}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Introduction}
+
+Bayes' rule:
+\begin{align*}
+p(\theta | \mathbf{y}) = \frac{p(\mathbf{y} | \theta) p(\theta)}
+                              {\int p(\mathbf{y} | \theta) p(\theta)\, d\theta}
+\end{align*}
+
+Maths made easier if $p(\mathbf{y}|\theta)p(\theta)$ has same form as $p(\theta|\mathbf{y})$. We will consider a reasonable choice for coin flips.
+
+\vspace{1em}
+Bernoulli distribution for $p(\mathbf{y}|\theta)$. Beta distribution for $p(\theta)$. The Beta distribution is a \emph{conjugate prior} to the Bernoulli distribution when used as a likelihood.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{The Likelihood Function: Bernoulli Distribution}
+\begin{columns}[c]
+\column{.6\textwidth}
+Analytical form for $p(\mathbf{y} | \theta)$: Bernoulli distribution
+\begin{align*}
+p(\mathbf{y}|\theta) &= \bern{\mathbf{y}}{\theta} \tag{6.1} \\
+                     &= p(y_0, y_1, \ldots|\theta) \\
+                     &\ \mathrm{assume\ independence}\\
+                     &= p(y_0 |\theta) p(y_1|\theta) p(\ldots|\theta) \\
+                     &= \prod_{y_i \in \mathbf{y}} \bern{y_i}{\theta} \\
+                     &= \theta^{\sum y_i}(1-\theta)^{\sum (1-y_i)} \\
+                     &= \theta^{z}(1-\theta)^{N-z} \tag{6.2} \\
+\end{align*}
+
+\column{.4\textwidth}
+\includegraphics[width=\linewidth]{img/A1c10k}
+\end{columns}
+\end{frame}
+
+
+
+
+
+\begin{frame}
+\frametitle{A Description of Credibilities: The Beta Distribution}
+Analytical form for $p(\theta)$: Beta distribution
+\begin{align*}
+p(\theta| a, b) &= \operatorname{beta}(\theta| a, b) \\
+                &= \frac{\theta^{a-1} (1-\theta)^{b-1}}
+                        {B(a, b)}\tag{6.3} \\
+                &= \frac{\theta^{a-1} (1-\theta)^{b-1}}
+                        {\int_0^1 \theta^{a-1} (1-\theta)^{b-1}\, d\theta} \\
+\end{align*}
+
+$B(a, b)$ is the \emph{Beta function}.
+
+\vspace{1em}
+Note: Prior and posterior must integrate to $1$. Likelihood needs not.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Beta distribution}
+\begin{figure}
+\centering
+\includegraphics[height=.8\textheight]{img/fig6_1}
+\end{figure}
+\end{frame}
+
+
+
+
+
+\begin{frame}
+\frametitle{Interlude: Why a Beta Prior? (I)}
+Consider the normalised likelihood:
+\begin{align*}
+\int_0^1 \frac{p(\mathbf{y}|\theta)}{f(\mathbf{y})}\, d\theta &= 1 \\
+\int_0^1 \frac{\theta^{z}(1-\theta)^{N-z}}
+              {f(\mathbf{y})}\, d\theta &= 1 \tag{using 6.2}
+\end{align*}
+Consider the beta distribution:
+\begin{align*}
+\int_0^1 \frac{\theta^{a-1} (1-\theta)^{b-1}}
+                        {B(a, b)}\, d\theta &= 1\tag{6.3}
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Interlude: Why a Beta Prior? (II)}
+
+Hence:
+\begin{align*}
+\int_0^1 \frac{\theta^{z}(1-\theta)^{N-z}}
+              {f(\mathbf{y})}\, d\theta
+&= \int_0^1 \frac{\theta^{a-1} (1-\theta)^{b-1}}
+                         {B(a, b)}\, d\theta
+\end{align*}
+Clearly $f=B; a=z+1; b=N-z+1$ and one can interpret $\operatorname{beta}(z+1, N-z+1)$ as representing prior knowledge about past coin flips.
+
+\vspace{1em}
+\textbf{Note:} $a=1; b=1 \implies z=0; N-z=0$, thus $\operatorname{beta}(1, 1)$ represents \emph{no} prior observations. The book claims a different thing.
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Specifying a Beta Prior (I)}
+
+Hence:
+\begin{align*}
+a=\mu\kappa \ \        &\operatorname{and}\ \ b=(1-\mu)\kappa \tag{6.5} \\
+a=\omega(\kappa-2)+1 \ \ &\operatorname{and}\ \ b=(1-\omega)(\kappa-2)+1 \text{\ for\ } \kappa>2 \tag{6.6}
+\end{align*}
+\begin{align*}
+z=\mu\kappa-1 \ \ &\operatorname{and}\ \ N-z=(1-\mu)\kappa-1 \text{\ for\ } \kappa>2 \\
+z=\omega(\kappa-2) \ \ &\operatorname{and}\ \ N-z=(1-\omega)(\kappa-2) \text{\ for\ } \kappa>2
+\end{align*}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Specifying a Beta Prior (II)}
+Can we interpret these numbers in terms of physical quantities?
+\begin{align*}
+% \mu=\frac{z+1}{\kappa} \ \ &\operatorname{and}\ \ \kappa=\frac{z+1}{\mu} \\
+% \omega=\frac{z}{\kappa-2} \ \ &\operatorname{and}\ \ \kappa=\frac{z}{\omega}+2 \text{\ for\ } \kappa>2 \\
+% \mu=1-\frac{N-z+1}{\kappa} \ \ &\operatorname{and}\ \ \kappa=\frac{N-z+1}{1-\mu} \\
+% \omega=1-\frac{N-z}{\kappa-2} \ \ &\operatorname{and}\ \ \kappa=\frac{N-z}{1-\omega}+2 \text{\ for\ } \kappa>2\\
+&\mu=\frac{z+1}{N+2}& \ \text{for } N>0;\ z>0\\
+&\omega=\frac{z}{N}& \ \text{for } N>1;\ z>0\\
+&\kappa=N+2 & \ \text{for } N>1;\ z>0
+\end{align*}
+
+where $\mu$ is the mean, $\omega$ is the mode, and $\kappa$ is the "concentration".
+
+\vspace{1em}
+$\mu$ and $\omega$ acually have units of \emph{volume concentration}. $\kappa$ is probably better interpreted as an inverse spread?
+
+\end{frame}
+
+% \begin{frame}
+% \frametitle{Specifying a Beta Prior (III)}
+
+% Note that $\kappa$ is the denominator in the calculation for $\mu$.
+% \begin{align*}
+% \mu = \frac{z+1}{N+2} = \frac{z+1}{\kappa}
+% \end{align*}
+% Hence $\kappa$ signifies degree of certainty of the dataset.
+
+% Qualitative argument: Suppose $1/\kappa$ represents the standard error squared of the mean $\mu$. Then 
+% \begin{align*}
+% \frac{1}{\kappa} &= \frac{\sigma_{\mu}^2}{N} \\
+% \sigma_{\mu}^2   &= \frac{N}{\kappa} = \frac{N}{N+2}
+% \end{align*}
+% This would then imply that as the "concentration" $\kappa$ grows, the standard error tends to 1.
+
+
+% \vspace{1em}
+% Caveat: This doesn't make any sense!
+
+% \end{frame}
+
+
+
+\begin{frame}
+\frametitle{Specifying a Beta Prior (III)}
+\begin{figure}
+\centering
+\includegraphics[height=.8\textheight]{img/fig6_2}
+\end{figure}
+\end{frame}
+
+
+
+
+\begin{frame}
+\frametitle{The Posterior Beta}
+
+Putting the previous work together gives us the posterior:
+\begin{align*}
+p(\theta| z, N) &= p(z, N) p(\theta) \frac{1}{p(z, N)} \\
+                &= \theta^{z}(1-\theta)^{N-z}
+                   \frac{\theta^{a-1}(1-\theta)^{b-1}}
+                       {B(a,b)} \frac{1}{p(z, N)} \\
+                &= \frac{\theta^{z+a-1}(1-\theta)^{N-z+b-1}}
+                        {B(a,b)p(z, N)} \\
+                &= \frac{\theta^{z+a-1}(1-\theta)^{N-z+b-1}}
+                        {B(z+a, N-z+b)}
+\end{align*}
+\end{frame}
+
+
+
+
+\begin{frame}
+\frametitle{Posterior is compromise of prior and likelihood (I)}
+
+Mean of the posterior can be factored:
+\begin{align*}
+\mu_{\text{posterior}} &= \mu_{\text{likelihood}} w_{\text{likelihood}}
+                          \mu_{\text{prior}} w_{\text{prior}}\\
+\frac{z+a}{N+a+b} &= \frac{z}{N} \frac{N}{N+a+b} \frac{a}{a+b} \frac{a+b}{N+a+b} \tag{6.9}
+\end{align*}
+
+Meaning that the mean of the posterior will be weighted average of the two constituent means. Remember $N_\text{prior}=a+b-2$ (thus this argument is a bit hand-wavy?).
+\end{frame}
+
+
+
+
+
+\begin{frame}
+\frametitle{Posterior is compromise of prior and likelihood (II)}
+\begin{figure}
+\centering
+\includegraphics[height=.8\textheight]{img/fig6_3}
+\end{figure}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Prior knowledge expressed as a beta distribution}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{img/fig6_4}
+\end{figure}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Prior knowledge that cannot be expressed as a beta distribution}
+\begin{columns}[c]
+\column{.5\textwidth}
+Suppose categorical mixture of two betas (e.g. coins from two makers).
+
+\vspace{1em}
+Posterior no longer beta (but should converge to one given large enough sample?).
+\column{.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[height=.8\textheight]{img/fig6_5}
+\end{figure}
+\end{columns}
+\end{frame}
+
+
+\end{document} 

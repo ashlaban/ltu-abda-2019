@@ -74,7 +74,7 @@ CERN and Luleå University of Technology \\
 \begin{center}
 {\huge{Chapter 5}}
 \\\vspace{2em}
-Gaining intuition about Bayes' rule
+(Gaining intuition about) Bayes' rule
 \vspace{5em}
 \end{center}
 \end{frame}
@@ -121,17 +121,14 @@ p(C=c\vert R=r) &= \frac{p(R=r\vert C=c) p(C=c)}{\int p(R=r, C=c')\, dc'}
 \begin{frame}
 \frametitle{A Note on Notation}
 Given a probability distribution $p(r, c)$, what does $p(0.5)$ signify?
-
-\vspace{1em}
 Unclear!
 
 \vspace{1em}
 More clear alternatives: $p_r(0.5)$ or $p(R=0.5)$
 
 \vspace{1em}
-Mathematically there is no problem with: $p(R=c, C=r)$.
-
-Keep track of you variables and observables!
+Mathematically there is no problem with: $p(R=c, C=r)$. 
+Keep track of your variables and observables!
 
 \end{frame}
 
@@ -260,10 +257,10 @@ That is, the probability of heads given a \emph{propensity} for heads.
 \frametitle{Complete Example: Estimating Bias in a Coin (II)}
 \begin{columns}[c]
 \column{.5\textwidth}
-Qualitatively: If we assume a coin is most probably fair
+Qualitatively: If we assume a coin is most probably fair\ldots
 
 \vspace{1em}
-If we measure a single flip and it is heads, this indicates we should shift our beliefs so heads is more likely.
+\ldots and measure a single flip resulting in heads, this indicates we should shift our beliefs so heads is more likely.
 
 \column{.5\textwidth}
 \begin{figure}
@@ -280,6 +277,7 @@ If we measure a single flip and it is heads, this indicates we should shift our 
 \column{.5\textwidth}
 A larger sample size makes us less reliant on the prior. Note that the prior is the same in both plots!
 
+\vspace{1em}
 This will be derived analytically for specific priors and likelihoods in the next chapter.
 
 \column{.5\textwidth}
@@ -296,7 +294,11 @@ This will be derived analytically for specific priors and likelihoods in the nex
 \column{.5\textwidth}
 Compare to previous plot.
 
-The prior can be thought of (through data order invariance) as incorporating previous data. Thus a flatter prior broades the posterior, while a sharper makes it more narrow (assuming it is reasonably correct).
+\vspace{1em}
+The prior can be thought of (through data order invariance) as incorporating previous data; A flat prior leans more on the likelihood; A sharp prior does so less.
+
+\vspace{1em}
+Assumes the prior is reasonably correct.
 
 \column{.5\textwidth}
 \begin{figure}
@@ -314,15 +316,17 @@ The prior can be thought of (through data order invariance) as incorporating pre
 
 Bayes rule:
 \begin{align*}
-p(\theta\vert X) &= \frac{p(X\vert \theta) p(\theta)}{p(X)}
+p(C=c\vert R=r) &= \frac{p(R=r\vert C=c) p(C=c)}{\int p(R=r, C=c')\, dc'}
 \end{align*}
 
-\textbf{Analytic solution:} is not in general easy, or even possible. Exceptions include specific prior-likelihood combinations called conjugate priors. (A prior conjugate to the given likelihood.)
+\textbf{Analytic solution:} is not in general easy, or even possible. Exceptions include specific prior-likelihood combinations (likelihood with \emph{conjugate prior}).
 
-One can also approximate tricky integrals with easier to integrate functions. Called \emph{variational approximation}.
+Variant: Approximate tricky-to-integrate functions. Called \emph{variational approximation}.
 
-\textbf{Grid approximation:} Discretisize, and numerically solve integrals. Fine for small parameter spaces, but quickly runs into the \emph{curse of dimensionality}.
+\vspace{1em}
+\textbf{Grid approximation:} Discretisize, and numerically solve integrals. Fine for small parameter spaces, quickly runs into the \emph{curse of dimensionality}.
 
+\vspace{1em}
 \textbf{Sampling approximation:} Randomly sample the posterior through \emph{Markov-chain Monte-Carlo} methods. These methods skip the evaluation of the integrals. Lead to Bayesian methods gaining practical use.
 
 \end{frame}

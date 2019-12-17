@@ -52,3 +52,23 @@ def mark_mode(ax, y, hist_kwargs={}, marker_kwargs=dict(marker='^'), text_color=
 
     ax.plot(mode, y_mode, color=text_color, **marker_kwargs)
     ax.annotate(annotation, (mode+text_xoffset, y_mode+text_yoffset), ha=text_ha, color=text_color, va=text_va, rotation=text_rotation)
+
+def ess(x):
+    def acov_lim(z, lim=0.05):
+        N, F = z.shape
+        k = 1
+        z = z - z.mean(axis=0)
+        L = []
+        coeff = np.asarray([1])
+        while k<1000 and coeff.max()>lim and N-k>1:
+            x = z[:-k]
+            y = z[k:]
+            coeff = np.sum(x*y, axis=0) / np.sqrt(np.sum(x**2, axis=0)*
+                                                  np.sum(y**2, axis=0))
+            L.append(coeff)
+            k += 1
+        return np.asarray(L)
+
+    N, F = x.shape
+    L = acov_lim(x, 0.05)
+    return N / (1 + 2*np.sum(L, axis=0))

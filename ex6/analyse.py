@@ -145,30 +145,36 @@ theta_adult_gen = np.random.normal(size=(N,), loc=mu[row_idx], scale=tau[row_idx
 theta_child_gen = np.random.normal(size=(N,), loc=mu[row_idx] + phi[row_idx], scale=tau[row_idx])
 
 # This definition mirrors the Krushke model (y = N(theta + phi, sigma)).
-theta_diff = (theta_child - theta_adult)
-theta_diff_gen = (theta_child_gen - theta_adult_gen)
+theta_diff = theta_child - theta_adult
+theta_diff_mean = theta_diff.mean()
+theta_diff = (theta_diff - theta_diff_mean) * sigma.mean() + theta_diff_mean
+
+theta_diff_gen = theta_child_gen - theta_adult_gen
+theta_diff_gen_mean = theta_diff_gen.mean()
+theta_diff_gen = (theta_diff_gen - theta_diff_gen_mean) * sigma.mean() + theta_diff_gen_mean
 
 axs[0].hist(theta_diff, bins=100, density=True, histtype='step', color='black', linestyle='solid',
                     label=r'$\phi$ posterior')
 axs[0].hist(theta_diff_gen, bins=100, density=True, histtype='step', color='black', linestyle='dashed',
                     label=r'$\phi$ prior')
 
-mark_mean(axs[0], theta_diff, hist_kwargs=dict(bins=100, density=True), text_ha='center')
-mark_mode(axs[0], theta_diff, hist_kwargs=dict(bins=100, density=True), text_ha='center')
-mark_hdi(axs[0], theta_diff,
-         hist_kwargs=dict(bins=100, density=True),
-         line_kwargs=dict(color='black', linewidth=0.5),
-         text_yoffset=0.02, text_va='bottom')
+mark_mean(axs[0], theta_diff_gen, hist_kwargs=dict(bins=100, density=True), text_xoffset=0.)
 
-mark_mean(axs[0], theta_diff_gen,
-          hist_kwargs=dict(bins=100, density=True),
-          marker_kwargs=dict(marker='^', fillstyle='none'),
-          text_ha='center')
-mark_hdi(axs[0], theta_diff_gen,
-          hist_kwargs=dict(bins=100, density=True),
-          line_kwargs=dict(color='black', linewidth=0.5, linestyle='dashed'),
-          text_yoffset=-0.02, text_va='top', text_ha=['left', 'right'])
+# mark_mean(axs[0], theta_diff, hist_kwargs=dict(bins=100, density=True), text_ha='center')
+# mark_mode(axs[0], theta_diff, hist_kwargs=dict(bins=100, density=True), text_ha='center')
+# mark_hdi(axs[0], theta_diff,
+#          hist_kwargs=dict(bins=100, density=True),
+#          line_kwargs=dict(color='black', linewidth=0.5),
+#          text_yoffset=0.02, text_va='bottom')
 
+# mark_mean(axs[0], theta_diff_gen,
+#           hist_kwargs=dict(bins=100, density=True),
+#           marker_kwargs=dict(marker='^', fillstyle='none'),
+#           text_ha='center')
+# mark_hdi(axs[0], theta_diff_gen,
+#           hist_kwargs=dict(bins=100, density=True),
+#           line_kwargs=dict(color='black', linewidth=0.5, linestyle='dashed'),
+#           text_yoffset=-0.02, text_va='top', text_ha=['left', 'right'])
 
 _phi = phi[row_idx]
 axs[1].hist(_phi, bins=100, density=True, histtype='step', color='black', linestyle='solid',
@@ -186,7 +192,7 @@ axs[0].set_title(r'Krushke $\phi = \theta_{\mathrm{child}} - \theta_{\mathrm{adu
 axs[0].legend()
 axs[0].set_xlabel(r'$\phi$')
 axs[0].set_ylabel(r'density')
-axs[0].set_xlim([-1.0, 1.5])
+axs[0].set_xlim([0.0, 0.8])
 axs[0].grid()
 axs[0].set_axisbelow(True)
 
@@ -194,11 +200,13 @@ axs[1].set_title(r'Gelman $\phi$')
 axs[1].legend()
 axs[1].set_xlabel(r'$\phi$')
 axs[1].set_ylabel(r'density')
-axs[1].set_xlim([-1.0, 1.5])
+axs[1].set_xlim([0.0, 0.8])
 axs[1].grid()
 axs[1].set_axisbelow(True)
 
-
+plt.show()
+import sys
+sys.exit()
 
 
 

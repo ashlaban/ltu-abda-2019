@@ -70,5 +70,5 @@ def ess(x):
         return np.asarray(L)
 
     N, F = x.shape
-    L = acov_lim(x, 0.05)
+    L = acov_lim(x, lim)
     return N / (1 + 2*np.sum(L, axis=0))

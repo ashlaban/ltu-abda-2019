@@ -204,10 +204,6 @@ axs[1].set_xlim([0.0, 0.8])
 axs[1].grid()
 axs[1].set_axisbelow(True)
 
-plt.show()
-import sys
-sys.exit()
-
 
 
 #

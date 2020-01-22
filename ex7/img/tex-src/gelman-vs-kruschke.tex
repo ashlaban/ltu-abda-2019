@@ -1,0 +1,13 @@
+\documentclass[varwidth=\linewidth]{standalone}
+
+\usepackage{amsmath}
+
+\begin{document}
+$$\begin{aligned}
+\textrm{Model: }& y \sim \mathcal{N}(\theta, \sigma); \theta \sim \mathcal{N}(\mu, \tau) \\
+\textrm{Kruschke: }& y = \theta + \sigma\xi \rightarrow y = \theta + \phi_{K} + \sigma\xi \\
+\textrm{Gelman: }& y = \theta + \mu + \sigma\tau\zeta \rightarrow y = \theta + \mu + \phi_{G} + \sigma\tau\zeta \\
+&\textrm{where } \xi \sim \mathcal{N}(\mu, \tau) \textrm{ and } \zeta\sim\mathcal{N}(0, 1) \\
+\implies& \phi_{G} = \phi_{K}
+\end{aligned}$$
+\end{document}

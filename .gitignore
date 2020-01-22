@@ -2,6 +2,7 @@
 # Project
 lit
 random
+*.npz
 
 # macOS
 .DS_Store

@@ -1,0 +1,13 @@
+
+\documentclass[varwidth=\linewidth]{standalone}
+
+\usepackage{amsmath}
+
+\begin{document}
+$$\begin{aligned}
+\underset{poseterior}{\underbrace{p(\mathbf{\theta}, \sigma, \mu, \phi, \tau|z)}} &\propto
+    \underset{likelihood}{\underbrace{p(z|\mathbf{\theta}, \sigma)}}
+    \underset{prior}{\underbrace{p(\mathbf{\theta} + \phi, \tau)p(\sigma)}}
+    \underset{hyper-prior}{\underbrace{p(\mu)p(\phi)p(\tau)}}
+\end{aligned}$$
+\end{document}

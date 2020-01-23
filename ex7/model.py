@@ -69,9 +69,9 @@ def log_model(z, theta0, theta1, sigma, mu0, mu1, tau0, tau1, phi0, phi1,
     # Reparameterisation
     eta0 = theta0[:]
     eta1 = theta1[:]
-    theta0 = mu0 + phi0*x0 + tau0*eta0
-    theta1 = mu1 + phi1*x0 + tau1*eta1
-    _pz  = lognormal(z, theta0[id] + theta1[id]*x1, sigma)
+    theta0_ = mu0 + phi0*x0 + tau0*eta0
+    theta1_ = mu1 + phi1*x0 + tau1*eta1
+    _pz  = lognormal(z, theta0_[id] + theta1_[id]*x1, sigma)
     _pt0 = lognormal(eta0, 0., 1.)
     _pt1 = lognormal(eta1, 0., 1.)
 

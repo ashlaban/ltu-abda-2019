@@ -83,16 +83,8 @@ class FactorSlice(SamplerBase):
             # w = np.real(E[dim, :]).astype(x0.dtype)
             m = max_iter
 
-            L = np.empty_like(x0)
-            R = np.empty_like(x0)
-
-            r = np.random.uniform(0, 1)
-
-            # Note: Interval assignment must be random for correctness
-            L[:] = x0
-            L -= r*w
-            R[:] = L
-            R += w
+            L = x0 - np.random.uniform(0, 1)*w
+            R = L + w
 
             # Note: m, j, and k important for correctness
             # TODO: Why?
@@ -198,8 +190,8 @@ class FactorSlice(SamplerBase):
                             L[:] = x1
                         x1 = (L + np.random.uniform(0.01, 0.99)*(R-L)).astype(x0.dtype)
                         if dummy == 100:
-                            x1 = x0[:]
-                    x0 = x1
+                            x1[:] = x0
+                    x0[:] = x1
                 dst[iSamp, :] = x1
 
                 if ((iSamp % (100)) == 0) and show_progress:
@@ -293,11 +285,13 @@ class FactorSlice(SamplerBase):
 
         cov = np.cov(tuning_sample, rowvar=False)
         eigenvals, eigenvecs = np.linalg.eigh(cov)
-        W = np.real(np.sqrt(np.abs(eigenvals)))
-        E = np.real(eigenvecs)
+        W = np.real(np.sqrt(np.abs(eigenvals))).astype(dtype)
+        E = np.real(eigenvecs).astype(dtype)
 
-        print(cov.shape)
-        print(E.shape)
+        # np.save('tuning_sample', tuning_sample)
+        # np.save('cov', cov)
+        # import sys
+        # sys.exit(0)
 
         if njobs < 2:
             samples, _ = _sample(pdf, x0, nsamples, ndims,

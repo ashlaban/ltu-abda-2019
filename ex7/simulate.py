@@ -9,7 +9,7 @@ import util
 
 from data import raw_y, ind, ids, cnts, is_child, is_child_row, x1
 from model import gen_sampler_pdf
-from samplers import Slice as Slice
+from samplers import FactorSlice as Slice
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--id', type=int, default=0,
@@ -63,10 +63,10 @@ else:
     z = log_y
     zx1 = x1
 
-x0 = np.concatenate([np.ones(shape=L, dtype=np.float32)*5,
-                     np.ones(shape=L, dtype=np.float32)*1,
+x0 = np.concatenate([np.ones(shape=L, dtype=np.float64)*5,
+                     np.ones(shape=L, dtype=np.float64)*1,
                      np.asarray([1, 5, 5, 1, 1, 1, 1],
-                    dtype=np.float32)])
+                    dtype=np.float64)])
 pdf = gen_sampler_pdf(z=z, n_theta=L,
                       id=ind, x0=is_child_row, x1=zx1)
 
@@ -85,6 +85,7 @@ sample_slice[:, L:2*L] = (sample_slice[:, -5].reshape(-1, 1) +
                           sample_slice[:, -1].reshape(-1, 1)*is_child_row.reshape(1, -1) +
                           sample_slice[:, -3].reshape(-1, 1)*eta1)
 
+
 if args.standardise:
     sample_slice[:, 0:L] *= log_y_std
     sample_slice[:, 0:L] += log_y_mean
@@ -94,8 +95,9 @@ if args.standardise:
 
     sample_slice[:, -7] *= log_y_std # sigma
 
-    sample_slice[:, -6] *= log_y_std  # mu0
-    sample_slice[:, -6] += log_y_mean # mu0
+    mu0 = sample_slice[:, -6]
+    mu1 = sample_slice[:, -5]
+    sample_slice[:, -6] *= log_y_std*(mu0 - mu1*x1.mean()/x1.std()) + log_y_mean
 
     sample_slice[:, -5] *= log_y_std  # mu1
     # sample_slice[:, -5] += log_y_mean # mu1

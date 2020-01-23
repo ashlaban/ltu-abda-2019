@@ -6,6 +6,7 @@ import multiprocessing
 import numpy as np
 import tqdm
 
+import numba
 from numba import jit, vectorize, objmode
 
 from ._base import SamplerBase
@@ -75,13 +76,11 @@ class FactorSlice(SamplerBase):
         '''
 
         @jit(nopython=True, nogil=True)
-        def find_slice(x0, y, pdf, W, E, dim=0, max_iter=100):
+        def find_slice(x0, y, pdf, W, E, dim=0, max_iter=200):
             '''
             '''
-            # TODO: Split into two function, make choice earler in code hierarchy.
-            #       Leaf choices are inefficient.
-            #  stepsize: must be array-like
-            w = np.real(W[dim]*E[dim, :]).astype(x0.dtype)
+            w = W[dim]*E[:, dim]
+            # w = np.real(E[dim, :]).astype(x0.dtype)
             m = max_iter
 
             L = np.empty_like(x0)
@@ -114,9 +113,11 @@ class FactorSlice(SamplerBase):
         @jit(nopython=True, nogil=True)
         def _sample_inplace(pdf, x0, dst, W, E, start=0, stop=-1, ndims=-1,
                             show_progress=False, show_progress_leave=False,
-                            show_progress_prefix='Sample'):
+                            show_progress_prefix='Sample',
+                            show_progress_offset=0):
             '''
             '''
+
             if stop == -1:
                 stop = len(dst)
 
@@ -125,6 +126,12 @@ class FactorSlice(SamplerBase):
 
             x1 = np.empty_like(x0)
             x1[:] = x0
+
+            if show_progress_offset > 0:
+                for i in range(show_progress_offset):
+                    print()
+                for i in range(show_progress_offset):
+                    print('\u001b[2A')
 
             # time_start = time.time()
 
@@ -135,42 +142,91 @@ class FactorSlice(SamplerBase):
                     L, R = find_slice(x0, y, pdf, W, E, dim=iDim)
                     x1 = (L + np.random.uniform(0, 1)*(R-L)).astype(x0.dtype)
 
+                    grand_idx = np.argmax(E[:, iDim])
+
+                    # print('Dist: ', np.linalg.norm(x1-x0))
+
+                    dummy = 0
                     while pdf(x1) < y:
+                        dummy += 1
+
                         # Shrinkage
-                        # print((np.sign(R - x0) == np.sign(x1 - x0)).all())
-                        
-                        # It seems that the final x1 can in the limit end up
-                        # somewhere other than x0. This _should_ be impossible.
-                        # The below code is an attempt to mitigate. Not working.
-                        # Idea was maybe there was ambiguity when a component
-                        # was 0 in one vector (non-matched zero in x1-x0 seen
-                        # in the wild).
-                        mask = np.logical_or((np.sign(R - x0) == 0),
-                                             (np.sign(x1 - x0) == 0))
-                        if not mask.any():
-                            if (np.sign(R - x0) == np.sign(x1 - x0)).all():
-                                R[:] = x1
-                            else:
-                                L[:] = x1
-                        x1 = (L + np.random.uniform(0, 1)*(R-L)).astype(x0.dtype)
+                        A = np.sign(L - x0)
+                        B = np.sign(R - x0)
+                        C = np.sign(x1 - x0)
+
+                        idx = np.ones_like(A, dtype=np.bool_)
+                        idx = np.logical_and(idx, A!=0)
+                        idx = np.logical_and(idx, B!=0)
+                        idx = np.logical_and(idx, C!=0)
+
+                        A = A[idx]
+                        B = B[idx]
+                        C = C[idx]
+
+                        if (A != -1*B).all():
+                            break
+                            print('Dist: ', dummy, '', np.linalg.norm(x1-x0))
+                            idx_ = np.where((A != -1*B))
+                            print(A)
+                            print(B)
+                            print(C[grand_idx])
+                            print()
+                            print()
+                            print(L[idx_])
+                            print(R[idx_])
+                            print(x0[idx_])
+                            print()
+                            print()
+                            print(E[:, iDim][idx_])
+                            print(W)
+                            assert(False)
+
+                        # if dummy > 1:
+                        #     print('Dist: ', dummy, '', np.linalg.norm(x1-x0), a, b, c)
+                        #     print(np.sign(L - x0))
+                        #     print(np.sign(R - x0))
+
+                        # if dummy > 1:
+                            # print(x1[:5])
+                            # print(x0[:5])
+
+                        # if (np.sign(R - x0) == np.sign(x1 - x0)).all():
+                        if (B == C).all():
+                            R[:] = x1
+                        else:
+                            L[:] = x1
+                        x1 = (L + np.random.uniform(0.01, 0.99)*(R-L)).astype(x0.dtype)
+                        if dummy == 100:
+                            x1 = x0[:]
                     x0 = x1
                 dst[iSamp, :] = x1
 
-                if ((iSamp % 100) == 0) and show_progress:
+                if ((iSamp % (100)) == 0) and show_progress:
+                    for i in range(show_progress_offset):
+                        print('\u001b[1B\u001b[1A')
                     print('\u001b[2K\u001b[1A')  # Clear entire line and move up 1
-                    print('Sample', iSamp, '/', stop, '\u001b[1A')
-            
+                    print('\u001b[2K', show_progress_prefix, iSamp, '/', stop, '\u001b[1A')
+                    for i in range(show_progress_offset):
+                        print('\u001b[2A')
+
             if show_progress:
+                for i in range(show_progress_offset):
+                    print('\u001b[1B\u001b[1A')
+
                 if show_progress_leave:
-                    print('Sample', iSamp+1, '/', stop)
+                    print(show_progress_prefix, iSamp+1, '/', stop, '\u001b[1A')
                 else:
                     print('\u001b[2K\u001b[1A')
+
+                for i in range(show_progress_offset):
+                    print('\u001b[2A')
 
             # time_end = time.time()
             # total_time = time_end - time_start
             # print(total_time)
 
-            print('x0.shape: ', x0.shape)
+            # print('x0.shape: ', x0.shape)
 
             return dst, x0#, total_time
 
@@ -224,26 +280,24 @@ class FactorSlice(SamplerBase):
         tuning_sample = Slice.sample(tuning_shape, pdf,
                                      x0=x0, burnin=False, dtype=dtype,
                                      max_iter=max_iter, step_size=step_size,
-                                     njobs=njobs, show_progress=True)
+                                     show_progress=True)
 
         x0 = tuning_sample[-1, :]
         step_size = np.std(tuning_sample, axis=0)
-        print('step_size.shape: ', step_size.shape)
 
         tuning_sample = Slice.sample(tuning_shape, pdf,
                                      x0=x0, burnin=False, dtype=dtype,
                                      max_iter=max_iter, step_size=step_size,
-                                     njobs=njobs, show_progress=True)
+                                     show_progress=True)
         x0 = tuning_sample[-1, :]
-                                     
-        print('tuning_sample.shape: ', tuning_sample.shape)
 
         cov = np.cov(tuning_sample, rowvar=False)
-        eigenvals, eigenvecs = np.linalg.eig(cov)
+        eigenvals, eigenvecs = np.linalg.eigh(cov)
         W = np.real(np.sqrt(np.abs(eigenvals)))
         E = np.real(eigenvecs)
 
-        print('Start sample')
+        print(cov.shape)
+        print(E.shape)
 
         if njobs < 2:
             samples, _ = _sample(pdf, x0, nsamples, ndims,
@@ -262,13 +316,18 @@ class FactorSlice(SamplerBase):
                 chunk_stop = chunk_start + current_chunk_size
                 nsamples_remaining -= current_chunk_size
 
-                jobs.append(multiprocessing.Process(target=_sample_inplace,
-                                             args=(pdf, x0),
-                                             kwargs=dict(dst=samples,
-                                                         ndims=ndims,
-                                                         start=chunk_start,
+                # print('Job {}: Indices {}, {}'.format(iJob,
+                #                                       chunk_start,
+                #                                       chunk_stop))
+
+                jobs.append(threading.Thread(target=_sample_inplace,
+                                             args=(pdf, x0, samples, W, E),
+                                             kwargs=dict(start=chunk_start,
                                                          stop=chunk_stop,
-                                                         step_size=step_size)))
+                                                         show_progress=True,
+                                                         show_progress_leave=True,
+                                                         show_progress_offset=iJob,
+                                                         show_progress_prefix='Job {}:'.format(iJob))))
             for job in jobs:
                 job.start()
             for job in jobs:
@@ -281,6 +340,7 @@ class FactorSlice(SamplerBase):
         total_time = end_time - start_time
 
         if show_progress:
+            print('\u001b['+str(njobs)+'B')
             print(f'Time taken: {total_time:.3f} seconds')
 
         return samples.reshape(orig_shape)

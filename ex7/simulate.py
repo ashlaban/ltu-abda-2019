@@ -9,7 +9,7 @@ import util
 
 from data import raw_y, ind, ids, cnts, is_child, is_child_row, x1
 from model import gen_sampler_pdf
-from samplers import FactorSlice as Slice
+from samplers import Slice as Slice
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--id', type=int, default=0,
@@ -45,7 +45,9 @@ args = parser.parse_args()
 
 id = args.id
 N = args.n
-F = 7+2*len(ids)
+
+L = len(ids)
+F = 7+2*L
 
 # if args.ex5:
 #     is_child_row = np.zeros_like(is_child_row)
@@ -61,11 +63,11 @@ else:
     z = log_y
     zx1 = x1
 
-x0 = np.concatenate([np.ones(shape=len(ids), dtype=np.float32)*5,
-                     np.ones(shape=len(ids), dtype=np.float32)*1,
+x0 = np.concatenate([np.ones(shape=L, dtype=np.float32)*5,
+                     np.ones(shape=L, dtype=np.float32)*1,
                      np.asarray([1, 5, 5, 1, 1, 1, 1],
                     dtype=np.float32)])
-pdf = gen_sampler_pdf(z=z, n_theta=len(ids),
+pdf = gen_sampler_pdf(z=z, n_theta=L,
                       id=ind, x0=is_child_row, x1=zx1)
 
 if args.profile:
@@ -74,21 +76,21 @@ if args.profile:
 else:
     sample_slice = Slice.sample([N, F], pdf, x0=x0, step_size=args.step_size, njobs=args.num_jobs)
 
-eta0 = sample_slice[:, 0:len(ids)]
-eta1 = sample_slice[:, len(ids):2*len(ids)]
-sample_slice[:, 0:len(ids)] = (sample_slice[:, -6].reshape(-1, 1) +
-                               sample_slice[:, -2].reshape(-1, 1)*is_child_row.reshape(1, -1) +
-                               sample_slice[:, -4].reshape(-1, 1)*eta0)
-sample_slice[:, len(ids):2*len(ids)] = (sample_slice[:, -5].reshape(-1, 1) +
-                                        sample_slice[:, -1].reshape(-1, 1)*is_child_row.reshape(1, -1) +
-                                        sample_slice[:, -3].reshape(-1, 1)*eta1)
+eta0 = sample_slice[:, 0:L]
+eta1 = sample_slice[:, L:2*L]
+sample_slice[:, 0:L] = (sample_slice[:, -6].reshape(-1, 1) +
+                        sample_slice[:, -2].reshape(-1, 1)*is_child_row.reshape(1, -1) +
+                        sample_slice[:, -4].reshape(-1, 1)*eta0)
+sample_slice[:, L:2*L] = (sample_slice[:, -5].reshape(-1, 1) +
+                          sample_slice[:, -1].reshape(-1, 1)*is_child_row.reshape(1, -1) +
+                          sample_slice[:, -3].reshape(-1, 1)*eta1)
 
 if args.standardise:
-    sample_slice[:, 0:len(ids)] *= log_y_std
-    sample_slice[:, 0:len(ids)] += log_y_mean
+    sample_slice[:, 0:L] *= log_y_std
+    sample_slice[:, 0:L] += log_y_mean
 
-    sample_slice[:, len(ids):2*len(ids)] *= log_y_std
-    sample_slice[:, len(ids):2*len(ids)] *= x1.std()
+    sample_slice[:, L:2*L] *= log_y_std
+    sample_slice[:, L:2*L] *= x1.std()
 
     sample_slice[:, -7] *= log_y_std # sigma
 
@@ -96,7 +98,7 @@ if args.standardise:
     sample_slice[:, -6] += log_y_mean # mu0
 
     sample_slice[:, -5] *= log_y_std  # mu1
-    sample_slice[:, -5] += log_y_mean # mu1
+    # sample_slice[:, -5] += log_y_mean # mu1
 
     sample_slice[:, -4] *= log_y_std # tau0
     sample_slice[:, -3] *= log_y_std # tau1
@@ -125,9 +127,9 @@ if args.do_special_trimming:
 if args.report:
     ess = util.ess(sample_slice).astype(int)
 
-    string = str(sample_slice[:, :len(ids)].mean(axis=0)).replace('\n', '\n             ')
+    string = str(sample_slice[:, :L].mean(axis=0)).replace('\n', '\n             ')
     print(f'Mean theta0: {string}')
-    string = str(sample_slice[:, len(ids):2*len(ids)].mean(axis=0)).replace('\n', '\n             ')
+    string = str(sample_slice[:, L:2*L].mean(axis=0)).replace('\n', '\n             ')
     print(f'     theta1: {string}')
     print(f'     sigma : {sample_slice[:, -7].mean(axis=0)}')
     print(f'     mu0   : {sample_slice[:, -6].mean(axis=0)}')
@@ -138,9 +140,9 @@ if args.report:
     print(f'     phi1  : {sample_slice[:, -1].mean(axis=0)}')
     print()
 
-    string = str(ess[:len(ids)]).replace('\n', '\n             ')
+    string = str(ess[:L]).replace('\n', '\n             ')
     print(f'ESS  theta0: {string}')
-    string = str(ess[len(ids):2*len(ids)]).replace('\n', '\n             ')
+    string = str(ess[L:2*L]).replace('\n', '\n             ')
     print(f'     theta1: {string}')
     print(f'     sigma : {ess[-7]}')
     print(f'     mu0   : {ess[-6]}')

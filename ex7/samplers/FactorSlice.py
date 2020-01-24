@@ -30,6 +30,10 @@ class FactorSlice(SamplerBase):
         axis-aligned direction at each step, the coordianate system is rotated
         to minimise correlation.
 
+        This can be seen (I think) as applying a PCA transformation as a
+        pre-processing step. (The steps are performed in the PCA directions
+        anyway.)
+
         Note: Currently this function assumes the output of `pdf` is the
               logarithm of the actual sample distribution.
 
@@ -138,15 +142,21 @@ class FactorSlice(SamplerBase):
 
                     # print('Dist: ', np.linalg.norm(x1-x0))
 
-                    dummy = 0
                     while pdf(x1) < y:
-                        dummy += 1
-
                         # Shrinkage
                         A = np.sign(L - x0)
                         B = np.sign(R - x0)
                         C = np.sign(x1 - x0)
 
+                        # This filters out components of the vectors that are
+                        # close enough to x0 to be considered equal, riddling
+                        # the vector with spurious zeros.
+                        #
+                        # This problem mainly arises when the precision of the
+                        # floating point represenation is to small (eg. float32
+                        # instead of float64). This siutation is problematic
+                        # and should be remedied. This section merely prevents
+                        # an infinite loop.
                         idx = np.ones_like(A, dtype=np.bool_)
                         idx = np.logical_and(idx, A!=0)
                         idx = np.logical_and(idx, B!=0)
@@ -156,41 +166,13 @@ class FactorSlice(SamplerBase):
                         B = B[idx]
                         C = C[idx]
 
-                        if (A != -1*B).all():
-                            break
-                            print('Dist: ', dummy, '', np.linalg.norm(x1-x0))
-                            idx_ = np.where((A != -1*B))
-                            print(A)
-                            print(B)
-                            print(C[grand_idx])
-                            print()
-                            print()
-                            print(L[idx_])
-                            print(R[idx_])
-                            print(x0[idx_])
-                            print()
-                            print()
-                            print(E[:, iDim][idx_])
-                            print(W)
-                            assert(False)
+                        R_has_same_sign_as_x1 = (B == C).all()
 
-                        # if dummy > 1:
-                        #     print('Dist: ', dummy, '', np.linalg.norm(x1-x0), a, b, c)
-                        #     print(np.sign(L - x0))
-                        #     print(np.sign(R - x0))
-
-                        # if dummy > 1:
-                            # print(x1[:5])
-                            # print(x0[:5])
-
-                        # if (np.sign(R - x0) == np.sign(x1 - x0)).all():
-                        if (B == C).all():
+                        if R_has_same_sign_as_x1:
                             R[:] = x1
                         else:
                             L[:] = x1
-                        x1 = (L + np.random.uniform(0.01, 0.99)*(R-L)).astype(x0.dtype)
-                        if dummy == 100:
-                            x1[:] = x0
+                        x1 = (L + np.random.uniform(0., 1.)*(R-L)).astype(x0.dtype)
                     x0[:] = x1
                 dst[iSamp, :] = x1
 

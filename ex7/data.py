@@ -93,7 +93,7 @@ is_child_row = np.asarray(is_child_row, dtype=np.bool)
 
 x = np.arange(1, 21)
 
-x1 = np.asarray(x1) - 1
+x1 = np.asarray(x1)
 
 y = np.ma.empty(shape=(len(ids), max(cnts)))
 mask = np.zeros_like(y, dtype=np.bool)

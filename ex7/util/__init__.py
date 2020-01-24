@@ -25,8 +25,8 @@ def mark_hdi(ax, y, hist_kwargs={}, line_kwargs={}, text_xoffset=0, text_yoffset
     text_ha = [text_ha, text_ha] if not isinstance(text_ha, list) else text_ha
 
     ax.annotate(f'hdi', (hdi_mi+text_xoffset, y_hdi+text_yoffset), ha=text_ha[0], color=text_color, va=text_va)
-    ax.annotate(f'{hdi_lo:.3}', (hdi_lo+text_xoffset, y_hdi+text_yoffset), ha=text_ha[0], color=text_color, va=text_va, rotation=text_rotation)
-    ax.annotate(f'{hdi_hi:.3}', (hdi_hi+text_xoffset, y_hdi+text_yoffset), ha=text_ha[1], color=text_color, va=text_va, rotation=text_rotation)
+    ax.annotate(f'{hdi_lo:.4}', (hdi_lo+text_xoffset, y_hdi+text_yoffset), ha=text_ha[0], color=text_color, va=text_va, rotation=text_rotation)
+    ax.annotate(f'{hdi_hi:.4}', (hdi_hi+text_xoffset, y_hdi+text_yoffset), ha=text_ha[1], color=text_color, va=text_va, rotation=text_rotation)
 
 
 def mark_mean(ax, y, hist_kwargs={}, marker_kwargs=dict(marker='^'), text_color='gray', text_xoffset=0, text_yoffset=0, text_ha='left', text_va='bottom', text_rotation=0):

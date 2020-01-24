@@ -85,35 +85,37 @@ sample_slice[:, L:2*L] = (sample_slice[:, -5].reshape(-1, 1) +
                           sample_slice[:, -1].reshape(-1, 1)*is_child_row.reshape(1, -1) +
                           sample_slice[:, -3].reshape(-1, 1)*eta1)
 
+raw_samples = np.copy(sample_slice[:, :])
 
 if args.standardise:
-    z_theta0 = sample_slice[:, 0:L]
-    z_theta1 = sample_slice[:, L:2*L]
-    z_sigma  = sample_slice[:, -7]
-    z_mu0    = sample_slice[:, -6]
-    z_mu1    = sample_slice[:, -5]
-    z_tau0   = sample_slice[:, -4]
-    z_tau1   = sample_slice[:, -3]
-    z_phi0   = sample_slice[:, -2]
-    z_phi1   = sample_slice[:, -1]
+    z_theta0 = np.copy(sample_slice[:, 0:L])
+    z_theta1 = np.copy(sample_slice[:, L:2*L])
+    z_sigma  = np.copy(sample_slice[:, -7])
+    z_mu0    = np.copy(sample_slice[:, -6])
+    z_mu1    = np.copy(sample_slice[:, -5])
+    z_tau0   = np.copy(sample_slice[:, -4])
+    z_tau1   = np.copy(sample_slice[:, -3])
+    z_phi0   = np.copy(sample_slice[:, -2])
+    z_phi1   = np.copy(sample_slice[:, -1])
 
     sample_slice[:, 0:L]   = (z_theta0*log_y_std -
                               z_theta1*log_y_std*x1.mean()/x1.std() +
                               log_y_mean)
     sample_slice[:, L:2*L] = z_theta1*log_y_std/x1.std()
 
-    sample_slice[:, -7] = zsigma*log_y_std
+    sample_slice[:, -7] = z_sigma*log_y_std
 
     # mu0, tau0, phi0
-    sample_slice[:, -6] *= (log_y_std * (z_mu0 - z_mu1*x1.mean()/x1.std()) +
+    sample_slice[:, -6] = (log_y_std * (z_mu0 - z_mu1*x1.mean()/x1.std()) +
                             log_y_mean)
-    sample_slice[:, -4] *= log_y_std * np.sqrt(z_tau0**2 - x1.mean()**2/x1.std()**2*z_tau1)
-    sample_slice[:, -2] *= log_y_std * (z_phi0 - z_phi1*x1.mean()/x1.std())
+    sample_slice[:, -4] = log_y_std * np.sqrt(z_tau0**2 +
+                                               x1.mean()**2/x1.std()**2*z_tau1**2)
+    sample_slice[:, -2] = log_y_std * (z_phi0 - z_phi1*x1.mean()/x1.std())
 
     # mu1, tau1, phi1
-    sample_slice[:, -5] *= log_y_std / x1.std() * z_mu1
-    sample_slice[:, -3] *= log_y_std / x1.std() * z_tau1
-    sample_slice[:, -1] *= log_y_std / x1.std() * z_phi1
+    sample_slice[:, -5] = log_y_std / x1.std() * z_mu1
+    sample_slice[:, -3] = log_y_std / x1.std() * z_tau1
+    sample_slice[:, -1] = log_y_std / x1.std() * z_phi1
 
 if args.do_special_trimming:
     # ess = int(util.ess(sample_slice))
@@ -168,4 +170,6 @@ if args.report:
 
 if not args.profile and not args.no_save:
     ex5_ext = ''
-    np.savez(f'sample{ex5_ext}-{N}-{id}.npz', data=sample_slice)
+    np.savez(f'sample{ex5_ext}-{N}-{id}.npz',
+             data=sample_slice,
+             raw_data=raw_samples)

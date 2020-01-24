@@ -87,26 +87,33 @@ sample_slice[:, L:2*L] = (sample_slice[:, -5].reshape(-1, 1) +
 
 
 if args.standardise:
-    sample_slice[:, 0:L] *= log_y_std
-    sample_slice[:, 0:L] += log_y_mean
+    z_theta0 = sample_slice[:, 0:L]
+    z_theta1 = sample_slice[:, L:2*L]
+    z_sigma  = sample_slice[:, -7]
+    z_mu0    = sample_slice[:, -6]
+    z_mu1    = sample_slice[:, -5]
+    z_tau0   = sample_slice[:, -4]
+    z_tau1   = sample_slice[:, -3]
+    z_phi0   = sample_slice[:, -2]
+    z_phi1   = sample_slice[:, -1]
 
-    sample_slice[:, L:2*L] *= log_y_std
-    sample_slice[:, L:2*L] *= x1.std()
+    sample_slice[:, 0:L]   = (z_theta0*log_y_std -
+                              z_theta1*log_y_std*x1.mean()/x1.std() +
+                              log_y_mean)
+    sample_slice[:, L:2*L] = z_theta1*log_y_std/x1.std()
 
-    sample_slice[:, -7] *= log_y_std # sigma
+    sample_slice[:, -7] = zsigma*log_y_std
 
-    mu0 = sample_slice[:, -6]
-    mu1 = sample_slice[:, -5]
-    sample_slice[:, -6] *= log_y_std*(mu0 - mu1*x1.mean()/x1.std()) + log_y_mean
+    # mu0, tau0, phi0
+    sample_slice[:, -6] *= (log_y_std * (z_mu0 - z_mu1*x1.mean()/x1.std()) +
+                            log_y_mean)
+    sample_slice[:, -4] *= log_y_std * np.sqrt(z_tau0**2 - x1.mean()**2/x1.std()**2*z_tau1)
+    sample_slice[:, -2] *= log_y_std * (z_phi0 - z_phi1*x1.mean()/x1.std())
 
-    sample_slice[:, -5] *= log_y_std  # mu1
-    # sample_slice[:, -5] += log_y_mean # mu1
-
-    sample_slice[:, -4] *= log_y_std # tau0
-    sample_slice[:, -3] *= log_y_std # tau1
-
-    sample_slice[:, -2] *= log_y_std # phi0
-    sample_slice[:, -1] *= log_y_std # phi1
+    # mu1, tau1, phi1
+    sample_slice[:, -5] *= log_y_std / x1.std() * z_mu1
+    sample_slice[:, -3] *= log_y_std / x1.std() * z_tau1
+    sample_slice[:, -1] *= log_y_std / x1.std() * z_phi1
 
 if args.do_special_trimming:
     # ess = int(util.ess(sample_slice))
